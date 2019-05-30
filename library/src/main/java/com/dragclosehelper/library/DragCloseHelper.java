@@ -16,6 +16,7 @@ import android.view.animation.LinearInterpolator;
 /**
  * @author bauer on 2019/4/17.
  */
+@SuppressWarnings("unused")
 public class DragCloseHelper {
     private ViewConfiguration viewConfiguration;
 
@@ -56,13 +57,13 @@ public class DragCloseHelper {
     /**
      * 正在恢复原位中
      */
-    private boolean isResetingAnimate = false;
+    private boolean isResettingAnimate = false;
     /**
      * 共享元素模式
      */
     private boolean isShareElementMode = false;
 
-    private View parentV, childV;
+    private View parentView, childView;
 
     private DragCloseListener dragCloseListener;
     private Context mContext;
@@ -80,8 +81,6 @@ public class DragCloseHelper {
 
     /**
      * 设置共享元素模式
-     *
-     * @param shareElementMode
      */
     public void setShareElementMode(boolean shareElementMode) {
         isShareElementMode = shareElementMode;
@@ -90,18 +89,18 @@ public class DragCloseHelper {
     /**
      * 设置拖拽关闭的view
      *
-     * @param parentV
-     * @param childV
+     * @param parentV 通常是父布局（activity跟布局）
+     * @param childV  图片预览模式就是，显示图片的ImageView
      */
     public void setDragCloseViews(View parentV, View childV) {
-        this.parentV = parentV;
-        this.childV = childV;
+        this.parentView = parentV;
+        this.childView = childV;
     }
 
     /**
      * 设置最大退出距离
      *
-     * @param maxExitY
+     * @param maxExitY 最大退出距离
      */
     public void setMaxExitY(int maxExitY) {
         this.maxExitY = maxExitY;
@@ -110,7 +109,7 @@ public class DragCloseHelper {
     /**
      * 设置最小缩放尺寸
      *
-     * @param minScale
+     * @param minScale 最小缩放尺寸
      */
     public void setMinScale(@FloatRange(from = 0.1f, to = 1.0f) float minScale) {
         this.minScale = minScale;
@@ -118,8 +117,6 @@ public class DragCloseHelper {
 
     /**
      * 设置debug模式
-     *
-     * @param debug
      */
     public void setDebug(boolean debug) {
         isDebug = debug;
@@ -127,9 +124,6 @@ public class DragCloseHelper {
 
     /**
      * 处理touch事件
-     *
-     * @param event
-     * @return
      */
     public boolean handleEvent(MotionEvent event) {
         if (dragCloseListener != null && dragCloseListener.intercept()) {
@@ -185,23 +179,23 @@ public class DragCloseHelper {
                     //已经开始，更新view
                     mCurrentTranslationY = currentRawY - mLastRawY + mLastTranslationY;
                     mCurrentTranslationX = currentRawX - mLastRawX + mLastTranslationX;
-                    float percent = 1 - Math.abs(mCurrentTranslationY / (maxExitY + childV.getHeight()));
+                    float percent = 1 - Math.abs(mCurrentTranslationY / (maxExitY + childView.getHeight()));
                     if (percent > 1) {
                         percent = 1;
                     } else if (percent < 0) {
                         percent = 0;
                     }
-                    parentV.getBackground().mutate().setAlpha((int) (percent * 255));
+                    parentView.getBackground().mutate().setAlpha((int) (percent * 255));
                     if (dragCloseListener != null) {
                         dragCloseListener.dragging(percent);
                     }
-                    childV.setTranslationY(mCurrentTranslationY);
-                    childV.setTranslationX(mCurrentTranslationX);
+                    childView.setTranslationY(mCurrentTranslationY);
+                    childView.setTranslationX(mCurrentTranslationX);
                     if (percent < minScale) {
                         percent = minScale;
                     }
-                    childV.setScaleX(percent);
-                    childV.setScaleY(percent);
+                    childView.setScaleX(percent);
+                    childView.setScaleY(percent);
                     return true;
                 }
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -239,10 +233,10 @@ public class DragCloseHelper {
     /**
      * 退出动画
      *
-     * @param currentY
+     * @param currentY 当前位置 y
      */
-    public void exitWithTranslation(float currentY) {
-        int targetValue = currentY > 0 ? childV.getHeight() : -childV.getHeight();
+    private void exitWithTranslation(float currentY) {
+        int targetValue = currentY > 0 ? childView.getHeight() : -childView.getHeight();
         ValueAnimator anim = ValueAnimator.ofFloat(mCurrentTranslationY, targetValue);
         anim.addUpdateListener(animation -> updateChildView(mCurrentTranslationX, (float) animation.getAnimatedValue()));
         anim.addListener(new Animator.AnimatorListener() {
@@ -277,8 +271,6 @@ public class DragCloseHelper {
 
     /**
      * 重置数据
-     *
-     * @param event
      */
     private void reset(MotionEvent event) {
         isSwipingToClose = false;
@@ -294,28 +286,28 @@ public class DragCloseHelper {
      * 更新缩放的view
      */
     private void updateChildView(float transX, float transY) {
-        childV.setTranslationY(transY);
-        childV.setTranslationX(transX);
-        float percent = Math.abs(transY / (maxExitY + childV.getHeight()));
+        childView.setTranslationY(transY);
+        childView.setTranslationX(transX);
+        float percent = Math.abs(transY / (maxExitY + childView.getHeight()));
         float scale = 1 - percent;
         if (scale < minScale) {
             scale = minScale;
         }
-        childV.setScaleX(scale);
-        childV.setScaleY(scale);
+        childView.setScaleX(scale);
+        childView.setScaleY(scale);
     }
 
     /**
      * 恢复到原位动画
      */
     private void resetCallBackAnimation() {
-        if (isResetingAnimate || mCurrentTranslationY == 0) {
+        if (isResettingAnimate || mCurrentTranslationY == 0) {
             return;
         }
         float ratio = mCurrentTranslationX / mCurrentTranslationY;
         ValueAnimator animatorY = ValueAnimator.ofFloat(mCurrentTranslationY, 0);
         animatorY.addUpdateListener(valueAnimator -> {
-            if (isResetingAnimate) {
+            if (isResettingAnimate) {
                 mCurrentTranslationY = (float) valueAnimator.getAnimatedValue();
                 mCurrentTranslationX = ratio * mCurrentTranslationY;
                 mLastTranslationY = mCurrentTranslationY;
@@ -326,16 +318,16 @@ public class DragCloseHelper {
         animatorY.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
-                isResetingAnimate = true;
+                isResettingAnimate = true;
             }
 
             @Override
             public void onAnimationEnd(Animator animation) {
-                if (isResetingAnimate) {
-                    parentV.getBackground().mutate().setAlpha(255);
+                if (isResettingAnimate) {
+                    parentView.getBackground().mutate().setAlpha(255);
                     mCurrentTranslationY = 0;
                     mCurrentTranslationX = 0;
-                    isResetingAnimate = false;
+                    isResettingAnimate = false;
                     if (dragCloseListener != null) {
                         dragCloseListener.dragCancel();
                     }
@@ -357,8 +349,6 @@ public class DragCloseHelper {
 
     /**
      * 打印日志
-     *
-     * @param msg
      */
     private void log(String msg) {
         if (isDebug) {
@@ -370,7 +360,7 @@ public class DragCloseHelper {
         /**
          * 是否有拦截
          *
-         * @return
+         * @return intercept or not
          */
         boolean intercept();
 
@@ -382,7 +372,7 @@ public class DragCloseHelper {
         /**
          * 拖拽中
          *
-         * @param percent
+         * @param percent 拖拽进度百分比
          */
         void dragging(float percent);
 
@@ -394,7 +384,7 @@ public class DragCloseHelper {
         /**
          * 拖拽结束并且关闭
          *
-         * @param isShareElementMode
+         * @param isShareElementMode 是否是ShareElementMode
          */
         void dragClose(boolean isShareElementMode);
     }

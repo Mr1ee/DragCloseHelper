@@ -42,6 +42,8 @@ public class ImageViewPreviewActivity extends BaseActivity {
 
     private boolean scrolling;
 
+    private int[] resList2 = new int[]{R.drawable.img1, R.drawable.img2, R.drawable.img3, R.drawable.img4, R.drawable.img5, R.drawable.img4};
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,23 +61,14 @@ public class ImageViewPreviewActivity extends BaseActivity {
         index = getIntent().getIntExtra("index", 0);
 
         list = new ArrayList<>();
-        ImageView imageView1 = new ImageView(this);
-        imageView1.setImageResource(R.drawable.img1);
-        imageView1.setAdjustViewBounds(true);
-        imageView1.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        list.add(imageView1);
 
-        ImageView imageView2 = new ImageView(this);
-        imageView2.setImageResource(R.drawable.img2);
-        imageView2.setAdjustViewBounds(true);
-        imageView2.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        list.add(imageView2);
-
-        ImageView imageView3 = new ImageView(this);
-        imageView3.setImageResource(R.drawable.img3);
-        imageView3.setAdjustViewBounds(true);
-        imageView3.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        list.add(imageView3);
+        for (int i : resList2) {
+            ImageView imageView1 = new ImageView(this);
+            imageView1.setImageResource(i);
+            imageView1.setAdjustViewBounds(true);
+            imageView1.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            list.add(imageView1);
+        }
 
         viewPager.setAdapter(new PagerAdapter() {
             @Override
